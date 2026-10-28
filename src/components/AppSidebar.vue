@@ -11,7 +11,7 @@
         <span v-if="item.id==='inicio'" class="nav-dot"></span>
       </button>
     </nav>
-    <div class="sidebar-bottom"><div class="family-avatar">F</div><div><strong>Incer Avenda�o</strong><small>Espacio compartido</small></div><button class="more-button" aria-label="Más opciones">···</button></div>
+    <div class="sidebar-bottom"><div class="family-avatar">I</div><div><strong>Incer Avendaño
   </aside>
 </template>
 
