@@ -160,6 +160,20 @@ for delete to authenticated using ((select auth.uid()) = user_id and (select pri
 
 grant select, insert, update, delete on public.push_subscriptions to authenticated;
 
+create or replace function public.is_email_allowed(check_email text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from private.family_members m
+    where m.email = lower(coalesce(check_email, ''))
+  );
+$$;
+grant execute on function public.is_email_allowed(text) to anon, authenticated;
+
 -- Configure this function as the Auth > Hooks > Before User Created hook.
 
 
