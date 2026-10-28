@@ -11,7 +11,7 @@
         <span v-if="item.id==='inicio'" class="nav-dot"></span>
       </button>
     </nav>
-    <div class="sidebar-bottom"><div class="family-avatar">F</div><div><strong>Familia Rivera</strong><small>Espacio compartido</small></div><button class="more-button" aria-label="M谩s opciones">路路路</button></div>
+    <div class="sidebar-bottom"><div class="family-avatar">F</div><div><strong>Incer Avenda駉</strong><small>Espacio compartido</small></div><button class="more-button" aria-label="M谩s opciones">路路路</button></div>
   </aside>
 </template>
 
