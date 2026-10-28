@@ -18,7 +18,8 @@ PWA familiar de agenda compartida para pagos, citas y actividades. La interfaz e
    ```
 
 3. En **Authentication → Hooks**, activá **Before User Created** y seleccioná `public.allowlisted_email_before_user_created`. Así el servidor rechaza el alta de correos que no estén en la lista. La política RLS también impide que usuarios no autorizados lean o modifiquen los datos compartidos.
-4. En **Authentication → Email Templates → Magic Link**, usá `{{ .Token }}` para enviar un código de un solo uso.
+4. En **Authentication → URL Configuration**, agregá tu dominio de producción (ej. `https://tudominio.com`) a **Site URL** y a **Redirect URLs**.
+5. En **Authentication → Email Templates → Magic Link**, usá `{{ .Token }}` para enviar un código de un solo uso.
 5. Copiá `.env.example` a `.env.local` y completá la URL y la publishable key del proyecto. Nunca pongas una `service_role` key en el navegador.
 6. Instalá dependencias e iniciá la app:
 
