@@ -4,13 +4,13 @@
       <span class="brand-mark login-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v10h-6v-7H9v7H3z"/></svg></span>
       <p class="eyebrow">EL HOGAR, EN ORDEN</p>
       <h1>{{otpSent?'Revisa tu correo':'Bienvenida a casa'}}</h1>
-      <p class="subtitle">{{otpSent?'Escribe el código de acceso que te enviamos.':'Ingresa con el correo autorizado de tu familia.'}}</p>
+      <p class="subtitle">{{otpSent?'Abre el enlace que te enviamos para entrar. Si el correo trae un código, escríbelo aquí.':'Ingresa con el correo autorizado de tu familia.'}}</p>
       <form v-if="!otpSent" @submit.prevent="$emit('send-otp')">
         <label>Correo electrónico<input :value="authEmail" @input="$emit('update:authEmail', $event.target.value)" type="email" autocomplete="email" required placeholder="tu@correo.com" /></label>
-        <button class="primary-button submit-button" :disabled="authLoading">{{authLoading?'Enviando…':'Enviar código de acceso'}}</button>
+        <button class="primary-button submit-button" :disabled="authLoading">{{authLoading?'Enviando…':'Enviar enlace de acceso'}}</button>
       </form>
       <form v-else @submit.prevent="$emit('verify-otp')">
-        <label>Código de un solo uso<input :value="authCode" @input="$emit('update:authCode', $event.target.value)" inputmode="numeric" autocomplete="one-time-code" required placeholder="123456" /></label>
+        <label>Código de un solo uso<input :value="authCode" @input="$emit('update:authCode', $event.target.value)" inputmode="numeric" autocomplete="one-time-code" required placeholder="Código del correo" /></label>
         <button class="primary-button submit-button" :disabled="authLoading">{{authLoading?'Verificando…':'Entrar'}}</button>
         <button class="text-button" type="button" @click="$emit('reset-otp')">Usar otro correo</button>
       </form>
