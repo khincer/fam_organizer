@@ -143,6 +143,38 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
     return data
   }
 
+  async function addProduct(name) {
+    const clean = (name || '').trim()
+    if (!clean) return null
+    const { data: product, error } = await client.from('shop_products').insert({ name: clean }).select().single()
+    if (error) { showToast(SAVE_ERROR); return null }
+    mergeProduct(product)
+    if (!readOnly.value) {
+      const { data: row, error: rowError } = await client.from('shop_purchases')
+        .insert({ product_id: product.id, week_of: week.value }).select().single()
+      if (rowError) showToast(SAVE_ERROR)
+      else onPurchase({ eventType: 'INSERT', new: row })
+    }
+    return product
+  }
+
+  async function updateProduct(product, patch) {
+    const { error } = await client.from('shop_products').update(patch).eq('id', product.id)
+    if (error) { showToast(SAVE_ERROR); return false }
+    mergeProduct({ ...(productsById.value.get(product.id) || product), ...patch })
+    return true
+  }
+
+  function renameProduct(product, name) {
+    const clean = (name || '').trim()
+    if (!clean) return Promise.resolve(false)
+    return updateProduct(product, { name: clean })
+  }
+
+  function setProductActive(product, active) {
+    return updateProduct(product, { active })
+  }
+
   function mergeSupermarket(row) {
     const rest = supermarkets.value.filter(s => s.id !== row.id)
     supermarkets.value = [...rest, row].sort((a, b) => a.name.localeCompare(b.name, 'es'))
@@ -189,6 +221,7 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
   return {
     week, readOnly, items, products, supermarkets, summary, loading, pendingIds,
     load, goToWeek, checkOff, uncheck, updateQuantity, removeFromWeek, addSupermarket,
+    addProduct, renameProduct, setProductActive,
     start, stop, refreshSummary,
   }
 }

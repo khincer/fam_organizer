@@ -27,7 +27,7 @@
 
         <div class="shop-toolbar">
           <input v-model="query" class="shop-search" type="search" placeholder="Buscar producto" aria-label="Buscar producto" />
-          <slot name="toolbar" :list="list" />
+          <button class="shop-secondary" @click="catalogOpen = true">Productos</button>
         </div>
 
         <p v-if="list.loading.value && !list.items.value.length" class="empty-state">Cargando…</p>
@@ -67,6 +67,9 @@
       <slot name="after" :list="list" />
     </template>
 
+    <ShopCatalog v-if="catalogOpen" :products="list.products.value" @close="catalogOpen = false"
+      @add="list.addProduct" @rename="list.renameProduct" @set-active="list.setProductActive" />
+
     <ShopCheckoffSheet v-if="checkoffItem" :item="checkoffItem" :supermarkets="list.supermarkets.value"
       :defaultSupermarket="lastSupermarket" @close="checkoffItem = null"
       @add-supermarket="list.addSupermarket" @save="saveCheckoff" />
@@ -95,6 +98,7 @@ import { weekLabel } from '../shop/week.js'
 import { groupItems } from '../shop/listState.js'
 import { currency } from '../shop/format.js'
 import ShopCheckoffSheet from './ShopCheckoffSheet.vue'
+import ShopCatalog from './ShopCatalog.vue'
 
 const props = defineProps({ user: { type: Object, default: null } })
 const emit = defineEmits(['toast'])
@@ -107,6 +111,7 @@ const writeLast = (v) => { try { localStorage.setItem(LAST_KEY, v) } catch { /* 
 
 const query = ref('')
 const menuFor = ref(null)
+const catalogOpen = ref(false)
 const checkoffItem = ref(null)
 const quantityItem = ref(null)
 const quantityForm = reactive({ quantity: 1, unit: '' })
