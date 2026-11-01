@@ -141,3 +141,51 @@ test('addSupermarket trims, reuses an existing name, and inserts new ones', asyn
   expect(fake.calls.find(c => c.table === 'shop_supermarkets' && c.op === 'insert').payload).toEqual({ name: 'La Colonia' })
   expect(await list.addSupermarket('   ')).toBeNull()
 })
+
+describe('catalog', () => {
+  const pan = { id: 'p2', name: 'Pan', photo_path: null, last_price: null, active: true }
+
+  test('addProduct in the current week also adds it to this week', async () => {
+    const { fake, list } = setup()
+    await list.load()
+    fake.respond('shop_products.insert', { data: pan, error: null })
+    fake.respond('shop_purchases.insert', { data: { id: 'b', product_id: 'p2', week_of: W, checked: false, quantity: 1 }, error: null })
+    expect(await list.addProduct('  Pan ')).toEqual(pan)
+    expect(fake.calls.find(c => c.table === 'shop_products' && c.op === 'insert').payload).toEqual({ name: 'Pan' })
+    expect(fake.calls.find(c => c.table === 'shop_purchases' && c.op === 'insert').payload).toEqual({ product_id: 'p2', week_of: W })
+    expect(list.items.value.map(i => i.product.name)).toEqual(['Leche', 'Pan'])
+    expect(list.products.value.some(p => p.id === 'p2')).toBe(true)
+  })
+
+  test('addProduct in a past week only creates the product', async () => {
+    const { fake, list } = setup()
+    await list.goToWeek(-1)
+    fake.respond('shop_products.insert', { data: pan, error: null })
+    await list.addProduct('Pan')
+    expect(fake.calls.some(c => c.table === 'shop_purchases' && c.op === 'insert')).toBe(false)
+  })
+
+  test('addProduct with a blank name does nothing', async () => {
+    const { fake, list } = setup()
+    expect(await list.addProduct('   ')).toBeNull()
+    expect(fake.calls).toHaveLength(0)
+  })
+
+  test('renameProduct updates only the name', async () => {
+    const { fake, list } = setup()
+    await list.load()
+    expect(await list.renameProduct(products[0], ' Leche entera ')).toBe(true)
+    const call = fake.calls.find(c => c.table === 'shop_products' && c.op === 'update')
+    expect(call.payload).toEqual({ name: 'Leche entera' })
+    expect(list.items.value[0].product.name).toBe('Leche entera')
+  })
+
+  test('setProductActive(false) leaves this week alone', async () => {
+    const { fake, list } = setup()
+    await list.load()
+    expect(await list.setProductActive(products[0], false)).toBe(true)
+    expect(fake.calls.find(c => c.table === 'shop_products' && c.op === 'update').payload).toEqual({ active: false })
+    expect(fake.calls.some(c => c.table === 'shop_purchases' && c.op !== 'select')).toBe(false)
+    expect(list.items.value).toHaveLength(1)
+  })
+})
