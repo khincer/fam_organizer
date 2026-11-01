@@ -64,7 +64,7 @@
         </template>
       </section>
 
-      <slot name="after" :list="list" />
+      <ShopReceipts :summary="list.summary.value" :week="list.week.value" @toast="(m) => emit('toast', m)" />
     </template>
 
     <ShopCatalog v-if="catalogOpen" :products="list.products.value" @close="catalogOpen = false"
@@ -101,6 +101,7 @@ import { currency } from '../shop/format.js'
 import ShopCheckoffSheet from './ShopCheckoffSheet.vue'
 import ShopCatalog from './ShopCatalog.vue'
 import ShopThumb from './ShopThumb.vue'
+import ShopReceipts from './ShopReceipts.vue'
 
 const props = defineProps({ user: { type: Object, default: null } })
 const emit = defineEmits(['toast'])
