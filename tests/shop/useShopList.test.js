@@ -226,3 +226,28 @@ describe('photos', () => {
     expect(toasts).toContain('No pudimos subir la foto. Inténtalo de nuevo.')
   })
 })
+
+describe('trends', () => {
+  test('weeklyTotals asks for 8 weeks', async () => {
+    const { fake, list } = setup()
+    fake.respond('rpc.shop_weekly_totals', { data: [{ week_of: W, total: 10 }], error: null })
+    expect(await list.weeklyTotals()).toEqual([{ week_of: W, total: 10 }])
+    expect(fake.calls.find(c => c.rpc === 'shop_weekly_totals').args).toEqual({ p_weeks: 8 })
+  })
+
+  test('priceHistory reads checked rows for the product, newest first, 12 max', async () => {
+    const { fake, list } = setup()
+    fake.respond('shop_purchases.select', { data: [{ week_of: W, unit_price: 6, supermarket: 'Pali' }], error: null })
+    expect(await list.priceHistory('p1')).toEqual([{ week_of: W, unit_price: 6, supermarket: 'Pali' }])
+    const call = fake.calls.find(c => c.table === 'shop_purchases')
+    expect(call.filters).toEqual(expect.arrayContaining([['eq', 'product_id', 'p1'], ['eq', 'checked', true]]))
+    expect(call.order).toEqual(['week_of', { ascending: false }])
+    expect(call.limit).toBe(12)
+  })
+
+  test('trend queries return [] on error', async () => {
+    const { fake, list } = setup()
+    fake.respond('rpc.shop_weekly_totals', { data: null, error: { message: 'x' } })
+    expect(await list.weeklyTotals()).toEqual([])
+  })
+})
