@@ -251,3 +251,22 @@ describe('trends', () => {
     expect(await list.weeklyTotals()).toEqual([])
   })
 })
+
+describe('shopping notifications', () => {
+  test('checking off the only item sends a finished notification', async () => {
+    const { fake, list } = setup()
+    await list.load()
+    await list.checkOff(list.items.value[0], form)
+    await new Promise(r => setTimeout(r, 0))
+    const call = fake.calls.find(c => c.invoke === 'send-push')
+    expect(call.opts.body).toMatchObject({ title: '¡Compras terminadas!', exclude_user_id: 'u1' })
+  })
+
+  test('a failed check-off sends nothing', async () => {
+    const { fake, list } = setup()
+    await list.load()
+    fake.respond('shop_purchases.update', { data: null, error: { message: 'x' } })
+    await list.checkOff(list.items.value[0], form)
+    expect(fake.calls.some(c => c.invoke)).toBe(false)
+  })
+})

@@ -3,6 +3,7 @@ import { supabase } from '../supabase.js'
 import { mondayOf, addWeeks, isCurrentWeek } from '../shop/week.js'
 import { joinItems, applyPurchaseChange, applyProductChange } from '../shop/listState.js'
 import { PHOTO_BUCKET, compressImage, photoPath } from '../shop/photos.js'
+import { shoppingEvent, notifyShopping } from '../shop/shoppingEvents.js'
 
 const SAVE_ERROR = 'No pudimos guardar. Revisa tu conexión.'
 const PHOTO_ERROR = 'No pudimos subir la foto. Inténtalo de nuevo.'
@@ -99,8 +100,9 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
     }
   }
 
-  function checkOff(item, { unit_price, quantity, unit, supermarket }) {
-    return optimisticUpdate(item, {
+  async function checkOff(item, { unit_price, quantity, unit, supermarket }) {
+    const before = items.value
+    const ok = await optimisticUpdate(item, {
       checked: true,
       unit_price: Number(unit_price),
       quantity: Number(quantity),
@@ -109,6 +111,12 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
       checked_by: unref(user)?.id,
       checked_at: new Date().toISOString(),
     })
+    if (ok) {
+      const after = before.map(i => (i.id === item.id ? { ...i, checked: true } : i))
+      const event = shoppingEvent(before, after)
+      if (event) notifyShopping(client, event, unref(user)?.id)
+    }
+    return ok
   }
 
   function uncheck(item) {
