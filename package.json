@@ -3,7 +3,23 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "scripts": { "dev": "vite", "build": "vite build", "preview": "vite preview" },
-  "dependencies": { "@supabase/supabase-js": "^2.49.1", "@vitejs/plugin-vue": "^5.2.1", "vite": "^6.1.0", "vite-plugin-pwa": "^0.21.1", "vue": "^3.5.13" },
-  "devDependencies": {}
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:db": "bash scripts/db-test.sh"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.1.0",
+    "vite-plugin-pwa": "^0.21.1",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vue/test-utils": "^2.5.1",
+    "jsdom": "^25.0.1",
+    "vitest": "^3.2.7"
+  }
 }
