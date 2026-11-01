@@ -24,6 +24,8 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
   let channel = null
   let summaryTimer = null
   let started = false
+  // True until the user browses to another week; then the app stays where they put it.
+  let followCurrent = true
 
   async function refreshSummary() {
     const target = week.value
@@ -66,6 +68,11 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
   async function goToWeek(delta) {
     const target = addWeeks(week.value, delta)
     if (target > mondayOf()) return
+    followCurrent = target === mondayOf()
+    await showWeek(target)
+  }
+
+  async function showWeek(target) {
     week.value = target
     items.value = []
     summary.value = null
@@ -222,12 +229,19 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
   }
 
   function onPurchase(payload) {
+    const row = payload.new
+    if (payload.eventType !== 'DELETE' && row?.week_of === week.value && !productsById.value.has(row.product_id)) {
+      load() // a product added on another phone; fetch it with its row
+      return
+    }
     const next = applyPurchaseChange(items.value, payload, week.value, productsById.value)
     if (next !== items.value) { items.value = next; scheduleSummary() }
   }
 
   function onVisible() {
-    if (document.visibilityState === 'visible') load()
+    if (document.visibilityState !== 'visible') return
+    if (followCurrent && week.value !== mondayOf()) showWeek(mondayOf())
+    else load()
   }
 
   function start() {
