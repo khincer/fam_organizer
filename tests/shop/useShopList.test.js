@@ -270,3 +270,49 @@ describe('shopping notifications', () => {
     expect(fake.calls.some(c => c.invoke)).toBe(false)
   })
 })
+
+describe('final review fixes', () => {
+  test('a realtime row for a product this phone has not seen yet triggers a reload', async () => {
+    const { fake, list } = setup()
+    await list.load()
+    list.start()
+    const pan = { id: 'p9', name: 'Pan', photo_path: null, last_price: null, active: true }
+    const newRow = { id: 'z', product_id: 'p9', week_of: W, checked: false, quantity: 1 }
+    fake.respond('shop_products.select', { data: [...products, pan], error: null })
+    fake.respond('shop_purchases.select', { data: [...rows, newRow], error: null })
+    fake.emit('shop_purchases', { eventType: 'INSERT', new: newRow, old: {} })
+    await vi.waitFor(() => expect(list.items.value.map(i => i.id)).toContain('z'))
+    list.stop()
+  })
+
+  test('coming back to the app on a new week jumps to the new current week', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    try {
+      vi.setSystemTime(new Date(2026, 10, 1, 20, 0)) // Sunday
+      const { list } = setup()
+      await list.load()
+      list.start()
+      expect(list.week.value).toBe('2026-10-26')
+      vi.setSystemTime(new Date(2026, 10, 2, 8, 0)) // Monday
+      Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true })
+      document.dispatchEvent(new Event('visibilitychange'))
+      await vi.waitFor(() => expect(list.week.value).toBe('2026-11-02'))
+      expect(list.readOnly.value).toBe(false)
+      list.stop()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('a week the user navigated to stays put when the app comes back', async () => {
+    const { list } = setup()
+    await list.load()
+    await list.goToWeek(-1)
+    list.start()
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+    await new Promise(r => setTimeout(r, 0))
+    expect(list.week.value).toBe(addWeeks(W, -1))
+    list.stop()
+  })
+})
