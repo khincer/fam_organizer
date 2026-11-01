@@ -189,3 +189,40 @@ describe('catalog', () => {
     expect(list.items.value).toHaveLength(1)
   })
 })
+
+describe('photos', () => {
+  const file = new Blob(['x'], { type: 'image/jpeg' })
+  const compress = async () => new Blob(['small'], { type: 'image/jpeg' })
+
+  test('setProductPhoto uploads to a new path without upsert, then saves photo_path', async () => {
+    const { fake, list } = setup()
+    await list.load()
+    expect(await list.setProductPhoto(products[0], file, { compress })).toBe(true)
+    expect(await list.setProductPhoto(products[0], file, { compress })).toBe(true)
+    const uploads = fake.calls.filter(c => c.storage === 'upload')
+    expect(uploads).toHaveLength(2)
+    expect(uploads[0].bucket).toBe('shop-products')
+    expect(uploads[0].args[0]).not.toBe(uploads[1].args[0])
+    expect(uploads.every(u => u.args[2].upsert === false)).toBe(true)
+    const update = fake.calls.find(c => c.table === 'shop_products' && c.op === 'update')
+    expect(update.payload).toEqual({ photo_path: uploads[0].args[0] })
+  })
+
+  test('a failed photo_path update removes the uploaded object', async () => {
+    const { fake, list } = setup()
+    await list.load()
+    fake.respond('shop_products.update', { data: null, error: { message: 'x' } })
+    expect(await list.setProductPhoto(products[0], file, { compress })).toBe(false)
+    const up = fake.calls.find(c => c.storage === 'upload')
+    expect(fake.calls.find(c => c.storage === 'remove').args[0]).toEqual([up.args[0]])
+  })
+
+  test('a failed upload does not touch the product', async () => {
+    const { fake, list, toasts } = setup()
+    await list.load()
+    fake.respond('storage.upload', { data: null, error: { message: 'x' } })
+    expect(await list.setProductPhoto(products[0], file, { compress })).toBe(false)
+    expect(fake.calls.some(c => c.table === 'shop_products' && c.op === 'update')).toBe(false)
+    expect(toasts).toContain('No pudimos subir la foto. Inténtalo de nuevo.')
+  })
+})

@@ -35,7 +35,7 @@
           <h3 class="shop-group-title">Por comprar ({{ groups.pending.length }})</h3>
           <ul class="shop-items">
             <li v-for="item in groups.pending" :key="item.id" class="shop-item" :class="{ busy: list.pendingIds.value.has(item.id) }">
-              <slot name="thumb" :item="item"><span class="shop-thumb" aria-hidden="true">🛒</span></slot>
+              <ShopThumb :product="item.product" />
               <button class="shop-item-main" :disabled="list.readOnly.value" @click="openCheckoff(item)">
                 <b>{{ item.product.name }}</b>
                 <small>{{ qty(item) }}<template v-if="item.product.last_price != null"> · Último: {{ currency(item.product.last_price) }}</template></small>
@@ -54,7 +54,7 @@
           <h3 class="shop-group-title">Comprados ({{ groups.done.length }})</h3>
           <ul class="shop-items">
             <li v-for="item in groups.done" :key="item.id" class="shop-item done" :class="{ busy: list.pendingIds.value.has(item.id) }">
-              <slot name="thumb" :item="item"><span class="shop-thumb" aria-hidden="true">✓</span></slot>
+              <ShopThumb :product="item.product" fallback="✓" />
               <button class="shop-item-main" :disabled="list.readOnly.value" @click="confirmUncheck(item)">
                 <b>{{ item.product.name }}</b>
                 <small>{{ qty(item) }} · {{ currency(item.unit_price) }} c/u · {{ item.supermarket }}</small>
@@ -68,7 +68,8 @@
     </template>
 
     <ShopCatalog v-if="catalogOpen" :products="list.products.value" @close="catalogOpen = false"
-      @add="list.addProduct" @rename="list.renameProduct" @set-active="list.setProductActive" />
+      @add="list.addProduct" @rename="list.renameProduct" @set-active="list.setProductActive"
+      @photo="list.setProductPhoto" />
 
     <ShopCheckoffSheet v-if="checkoffItem" :item="checkoffItem" :supermarkets="list.supermarkets.value"
       :defaultSupermarket="lastSupermarket" @close="checkoffItem = null"
@@ -99,6 +100,7 @@ import { groupItems } from '../shop/listState.js'
 import { currency } from '../shop/format.js'
 import ShopCheckoffSheet from './ShopCheckoffSheet.vue'
 import ShopCatalog from './ShopCatalog.vue'
+import ShopThumb from './ShopThumb.vue'
 
 const props = defineProps({ user: { type: Object, default: null } })
 const emit = defineEmits(['toast'])

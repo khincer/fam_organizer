@@ -2,8 +2,10 @@ import { computed, ref, unref } from 'vue'
 import { supabase } from '../supabase.js'
 import { mondayOf, addWeeks, isCurrentWeek } from '../shop/week.js'
 import { joinItems, applyPurchaseChange, applyProductChange } from '../shop/listState.js'
+import { PHOTO_BUCKET, compressImage, photoPath } from '../shop/photos.js'
 
 const SAVE_ERROR = 'No pudimos guardar. Revisa tu conexión.'
+const PHOTO_ERROR = 'No pudimos subir la foto. Inténtalo de nuevo.'
 const LOAD_ERROR = 'No pudimos cargar la lista. Inténtalo de nuevo.'
 const fold = (s) => (s || '').trim().toLowerCase()
 
@@ -175,6 +177,19 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
     return updateProduct(product, { active })
   }
 
+  async function setProductPhoto(product, file, { compress = compressImage } = {}) {
+    let blob
+    try { blob = await compress(file) } catch { showToast(PHOTO_ERROR); return false }
+    const path = photoPath(product.id)
+    const bucket = client.storage.from(PHOTO_BUCKET)
+    const { error } = await bucket.upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+    if (error) { showToast(PHOTO_ERROR); return false }
+    const saved = await updateProduct(product, { photo_path: path })
+    // Members have no delete policy on storage, so this cleanup is best effort.
+    if (!saved) await bucket.remove([path]).catch(() => {})
+    return saved
+  }
+
   function mergeSupermarket(row) {
     const rest = supermarkets.value.filter(s => s.id !== row.id)
     supermarkets.value = [...rest, row].sort((a, b) => a.name.localeCompare(b.name, 'es'))
@@ -221,7 +236,7 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
   return {
     week, readOnly, items, products, supermarkets, summary, loading, pendingIds,
     load, goToWeek, checkOff, uncheck, updateQuantity, removeFromWeek, addSupermarket,
-    addProduct, renameProduct, setProductActive,
+    addProduct, renameProduct, setProductActive, setProductPhoto,
     start, stop, refreshSummary,
   }
 }
