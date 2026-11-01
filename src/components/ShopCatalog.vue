@@ -7,13 +7,13 @@
 
       <form class="shop-new-market" @submit.prevent="add">
         <input v-model="newName" placeholder="Nuevo producto" aria-label="Nuevo producto" />
-        <button class="shop-secondary" type="submit" :disabled="!newName.trim() || adding">Agregar</button>
+        <button class="shop-secondary" type="submit" :disabled="!newName.trim()">Agregar</button>
       </form>
 
       <h3 class="shop-group-title">Activos ({{ active.length }})</h3>
       <ul class="shop-items">
         <li v-for="p in active" :key="p.id" class="shop-item">
-          <slot name="thumb" :product="p"><span class="shop-thumb" aria-hidden="true">🛒</span></slot>
+          <ShopThumb :product="p" />
           <div class="shop-item-main" v-if="editing !== p.id">
             <b>{{ p.name }}</b>
             <small v-if="p.last_price != null">Último: {{ currency(p.last_price) }}</small>
@@ -22,7 +22,9 @@
             <input v-model="editName" :aria-label="`Nuevo nombre de ${p.name}`" />
             <button class="text-button" type="submit">Guardar</button>
           </form>
-          <slot name="actions" :product="p" />
+          <label class="text-button shop-photo-button">Foto
+            <input type="file" accept="image/*" capture="environment" class="visually-hidden" @change="onPhoto(p, $event)" />
+          </label>
           <button v-if="editing !== p.id" class="text-button" @click="startRename(p)">Renombrar</button>
           <button class="text-button" @click="$emit('set-active', p, false)">Desactivar</button>
         </li>
@@ -45,16 +47,16 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { currency } from '../shop/format.js'
+import ShopThumb from './ShopThumb.vue'
 
 const props = defineProps({ products: { type: Array, default: () => [] } })
-const emit = defineEmits(['close', 'add', 'rename', 'set-active'])
+const emit = defineEmits(['close', 'add', 'rename', 'set-active', 'photo'])
 
 const byName = (a, b) => a.name.localeCompare(b.name, 'es')
 const active = computed(() => props.products.filter(p => p.active).sort(byName))
 const inactive = computed(() => props.products.filter(p => !p.active).sort(byName))
 
 const newName = ref('')
-const adding = ref(false)
 const editing = ref(null)
 const editName = ref('')
 
@@ -62,6 +64,12 @@ function add() {
   if (!newName.value.trim()) return
   emit('add', newName.value)
   newName.value = ''
+}
+
+function onPhoto(p, event) {
+  const file = event.target.files?.[0]
+  if (file) emit('photo', p, file)
+  event.target.value = ''
 }
 
 function startRename(p) { editing.value = p.id; editName.value = p.name }
