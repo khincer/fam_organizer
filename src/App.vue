@@ -32,6 +32,7 @@
           </div>
           <section class="panel history-preview"><div class="panel-heading"><div><p class="eyebrow">UN POCO DE CONTEXTO</p><h2>Últimos movimientos</h2></div><button class="text-button" @click="activeTab='historial'">Ver historial <span>→</span></button></div><div v-for="entry in recentHistory" :key="entry.id" class="history-row"><span class="history-bullet" :class="entry.kind==='pago'?'paid':'visit'">{{entry.kind==='pago'?'✓':'✳'}}</span><span class="history-title"><b>{{entry.title}}</b><small>{{entry.meta}}</small></span><span class="history-amount">{{entry.amount||'Cita completada'}}</span></div><p v-if="!recentHistory.length" class="empty-state">Todavía no hay movimientos.</p></section>
         </section>
+        <section v-else-if="activeTab==='compras'" class="other-page"><ShopList :user="user" @toast="showToast" /></section>
         <section v-else class="other-page"><div class="welcome-row"><div><p class="eyebrow">Incer Avendaño</p><h1>{{currentTitle}}</h1><p class="subtitle">{{pageDescription}}</p></div><button class="primary-button" @click="openAdd(activeTab==='citas'?'cita':'pago')"><span class="plus">＋</span> {{activeTab==='citas'?'Agendar cita':'Agregar pendiente'}}</button></div>
           <div class="panel placeholder-panel"><div class="panel-heading"><div><p class="eyebrow">AGENDA COMPARTIDA</p><h2>{{currentTitle}}</h2></div></div><template v-if="activeTab==='historial'"><div v-for="entry in history" :key="entry.id" class="history-row"><span class="history-bullet" :class="entry.kind==='pago'?'paid':'visit'">{{entry.kind==='pago'?'✓':'✳'}}</span><span class="history-title"><b>{{entry.title}}</b><small>{{entry.meta}}</small></span><span class="history-amount">{{entry.amount||'Cita completada'}}</span></div><p v-if="!history.length" class="empty-state">Todavía no hay movimientos.</p></template><div v-else class="agenda-list"><AgendaItem v-for="item in activeList" :key="item.id" :item="item" @mark-paid="markPaid" @mark-completed="markCompleted" /><p v-if="!activeList.length" class="empty-state">No hay elementos para mostrar.</p></div></div>
         </section>
@@ -59,6 +60,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { supabase, supabaseReady } from './supabase.js'
+import ShopList from './components/ShopList.vue'
 import { useNotifications } from './composables/useNotifications.js'
 import AppSidebar from './components/AppSidebar.vue'
 import AppTopbar from './components/AppTopbar.vue'
@@ -67,9 +69,9 @@ import ItemModal from './components/ItemModal.vue'
 import LoginScreen from './components/LoginScreen.vue'
 
 const activeTab=ref('inicio'), modalOpen=ref(false), toast=ref(''), user=ref(null), authEmail=ref(''), authCode=ref(''), otpSent=ref(false), authLoading=ref(false), authMessage=ref(''), saving=ref(false), formError=ref('')
-const nav=[{id:'inicio',label:'Inicio',icon:'⌂'},{id:'pagos',label:'Pagos',icon:'＄'},{id:'citas',label:'Citas y actividades',icon:'▦'},{id:'historial',label:'Historial',icon:'↺'}]
+const nav=[{id:'inicio',label:'Inicio',icon:'⌂'},{id:'pagos',label:'Pagos',icon:'＄'},{id:'citas',label:'Citas y actividades',icon:'▦'},{id:'compras',label:'Compras',icon:'🛒'},{id:'historial',label:'Historial',icon:'↺'}]
 const currentTitle=computed(()=>nav.find(n=>n.id===activeTab.value)?.label||'Inicio')
-const pageDescription=computed(()=>({pagos:'Pagos recurrentes y gastos de una sola vez.',citas:'Consultas, actividades y momentos importantes.',historial:'Una memoria compartida de lo que ya pasó.'}[activeTab.value]))
+const pageDescription=computed(()=>({pagos:'Pagos recurrentes y gastos de una sola vez.',citas:'Consultas, actividades y momentos importantes.',historial:'Una memoria compartida de lo que ya pasó.',compras:'La lista de la semana, entre todos.'}[activeTab.value]))
 const demoUpcoming=[{id:'d1',date:'2026-10-29',kind:'cita',title:'Cita con pediatra',meta:'Dra. Méndez · Clínica Central',time:'9:00 am',patient:'Sofía',status:'scheduled'},{id:'d2',date:'2026-10-30',kind:'pago',title:'Colegiatura',meta:'Colegio Arboleda',amount:'C$340.00',time:'MENSUAL',recurring:true,status:'pending'},{id:'d3',date:'2026-11-02',kind:'pago',title:'Actividad de Halloween',meta:'Colegio Arboleda',amount:'C$18.00',time:'UNA VEZ',status:'pending'},{id:'d4',date:'2026-11-04',kind:'cita',title:'Revisión dental',meta:'Dr. Paredes · Sonrisa',time:'3:30 pm',patient:'Tomás',status:'scheduled'}]
 const upcoming=ref(supabaseReady?[]:demoUpcoming.map(x=>({...x}))), history=ref(supabaseReady?[]:[{id:'h1',kind:'pago',title:'Pago de electricidad',meta:'Carlos · 27 oct',amount:'C$82.40'},{id:'h2',kind:'cita',title:'Consulta dental',meta:'Tomás · Dra. López · 21 oct',amount:'Cita completada'}])
 const recentHistory=computed(()=>history.value.slice(0,2)), activeList=computed(()=>upcoming.value.filter(i=>activeTab.value==='citas'?i.kind==='cita':i.kind==='pago'))
