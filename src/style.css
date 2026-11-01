@@ -54,3 +54,12 @@
 .shop-receipt li,.shop-receipt-total{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:#4f5c54}
 .shop-receipt-total{margin:8px 0 0;font-weight:600;color:#23352f}
 .shop-week-total{border-top:2px solid var(--line);padding-top:12px;font-size:15px}
+.shop-trends{padding:18px 21px;margin-top:18px}.shop-trends h2{margin:0 0 8px;font:700 18px Manrope,sans-serif;color:#23382f}
+.shop-bars{width:100%;height:auto;display:block}
+.shop-bar{fill:#9cc2b4}.shop-bar.current{fill:var(--green)}
+.shop-bar-value{font-size:10px;fill:#4f5c54;font-weight:600}.shop-bar-label{font-size:10px;fill:#858a82}
+.shop-history{list-style:none;margin:0 0 6px 52px;padding:0;width:100%;display:grid;gap:4px;font-size:12px;color:#4f5c54}
+.shop-history li{display:flex;justify-content:space-between;gap:10px}
+.shop-dash{display:flex;align-items:center;gap:12px;width:100%;padding:16px;text-align:left;margin-bottom:18px;color:#23352f}
+.shop-dash-icon{width:40px;height:40px;border-radius:12px;background:#eef3ee;display:grid;place-items:center;font-size:18px;flex:none}
+.shop-dash-body{display:grid;gap:2px;flex:1;min-width:0}.shop-dash-body b{font-size:13px}

@@ -190,6 +190,18 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
     return saved
   }
 
+  async function weeklyTotals() {
+    const { data, error } = await client.rpc('shop_weekly_totals', { p_weeks: 8 })
+    return error ? [] : data || []
+  }
+
+  async function priceHistory(productId) {
+    const { data, error } = await client.from('shop_purchases').select('week_of, unit_price, supermarket')
+      .eq('product_id', productId).eq('checked', true)
+      .order('week_of', { ascending: false }).limit(12)
+    return error ? [] : data || []
+  }
+
   function mergeSupermarket(row) {
     const rest = supermarkets.value.filter(s => s.id !== row.id)
     supermarkets.value = [...rest, row].sort((a, b) => a.name.localeCompare(b.name, 'es'))
@@ -236,7 +248,7 @@ export function useShopList({ client = supabase, user, showToast = () => {} } = 
   return {
     week, readOnly, items, products, supermarkets, summary, loading, pendingIds,
     load, goToWeek, checkOff, uncheck, updateQuantity, removeFromWeek, addSupermarket,
-    addProduct, renameProduct, setProductActive, setProductPhoto,
+    addProduct, renameProduct, setProductActive, setProductPhoto, weeklyTotals, priceHistory,
     start, stop, refreshSummary,
   }
 }

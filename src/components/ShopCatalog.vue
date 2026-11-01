@@ -14,10 +14,10 @@
       <ul class="shop-items">
         <li v-for="p in active" :key="p.id" class="shop-item">
           <ShopThumb :product="p" />
-          <div class="shop-item-main" v-if="editing !== p.id">
+          <button class="shop-item-main" v-if="editing !== p.id" :aria-expanded="historyFor === p.id" @click="toggleHistory(p)">
             <b>{{ p.name }}</b>
             <small v-if="p.last_price != null">Último: {{ currency(p.last_price) }}</small>
-          </div>
+          </button>
           <form v-else class="shop-rename" @submit.prevent="saveRename(p)">
             <input v-model="editName" :aria-label="`Nuevo nombre de ${p.name}`" />
             <button class="text-button" type="submit">Guardar</button>
@@ -27,6 +27,10 @@
           </label>
           <button v-if="editing !== p.id" class="text-button" @click="startRename(p)">Renombrar</button>
           <button class="text-button" @click="$emit('set-active', p, false)">Desactivar</button>
+          <ul v-if="historyFor === p.id" class="shop-history">
+            <li v-if="!history.length">Sin compras registradas.</li>
+            <li v-for="h in history" :key="h.week_of + h.supermarket"><span>{{ weekLabel(h.week_of) }} · {{ h.supermarket }}</span><b>{{ currency(h.unit_price) }}</b></li>
+          </ul>
         </li>
       </ul>
       <p v-if="!active.length" class="empty-state">Todavía no hay productos.</p>
@@ -48,8 +52,12 @@
 import { computed, ref } from 'vue'
 import { currency } from '../shop/format.js'
 import ShopThumb from './ShopThumb.vue'
+import { weekLabel } from '../shop/week.js'
 
-const props = defineProps({ products: { type: Array, default: () => [] } })
+const props = defineProps({
+  products: { type: Array, default: () => [] },
+  priceHistory: { type: Function, default: async () => [] },
+})
 const emit = defineEmits(['close', 'add', 'rename', 'set-active', 'photo'])
 
 const byName = (a, b) => a.name.localeCompare(b.name, 'es')
@@ -70,6 +78,16 @@ function onPhoto(p, event) {
   const file = event.target.files?.[0]
   if (file) emit('photo', p, file)
   event.target.value = ''
+}
+
+const historyFor = ref(null)
+const history = ref([])
+async function toggleHistory(p) {
+  if (historyFor.value === p.id) { historyFor.value = null; return }
+  history.value = []
+  historyFor.value = p.id
+  const rows = await props.priceHistory(p.id)
+  if (historyFor.value === p.id) history.value = rows
 }
 
 function startRename(p) { editing.value = p.id; editName.value = p.name }

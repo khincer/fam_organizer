@@ -28,6 +28,7 @@
         <div class="shop-toolbar">
           <input v-model="query" class="shop-search" type="search" placeholder="Buscar producto" aria-label="Buscar producto" />
           <button class="shop-secondary" @click="catalogOpen = true">Productos</button>
+          <button class="shop-secondary" :aria-pressed="trendsOpen" @click="trendsOpen = !trendsOpen">Tendencias</button>
         </div>
 
         <p v-if="list.loading.value && !list.items.value.length" class="empty-state">Cargando…</p>
@@ -64,12 +65,13 @@
         </template>
       </section>
 
+      <ShopTrends v-if="trendsOpen" :load="list.weeklyTotals" />
       <ShopReceipts :summary="list.summary.value" :week="list.week.value" @toast="(m) => emit('toast', m)" />
     </template>
 
     <ShopCatalog v-if="catalogOpen" :products="list.products.value" @close="catalogOpen = false"
       @add="list.addProduct" @rename="list.renameProduct" @set-active="list.setProductActive"
-      @photo="list.setProductPhoto" />
+      @photo="list.setProductPhoto" :priceHistory="list.priceHistory" />
 
     <ShopCheckoffSheet v-if="checkoffItem" :item="checkoffItem" :supermarkets="list.supermarkets.value"
       :defaultSupermarket="lastSupermarket" @close="checkoffItem = null"
@@ -102,6 +104,7 @@ import ShopCheckoffSheet from './ShopCheckoffSheet.vue'
 import ShopCatalog from './ShopCatalog.vue'
 import ShopThumb from './ShopThumb.vue'
 import ShopReceipts from './ShopReceipts.vue'
+import ShopTrends from './ShopTrends.vue'
 
 const props = defineProps({ user: { type: Object, default: null } })
 const emit = defineEmits(['toast'])
@@ -115,6 +118,7 @@ const writeLast = (v) => { try { localStorage.setItem(LAST_KEY, v) } catch { /* 
 const query = ref('')
 const menuFor = ref(null)
 const catalogOpen = ref(false)
+const trendsOpen = ref(false)
 const checkoffItem = ref(null)
 const quantityItem = ref(null)
 const quantityForm = reactive({ quantity: 1, unit: '' })

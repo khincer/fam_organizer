@@ -27,7 +27,7 @@
             </section>
             <aside class="side-column">
               <section class="panel quick-panel"><div class="panel-heading"><div><p class="eyebrow">UN PASO RÁPIDO</p><h2>Accesos rápidos</h2></div><span class="sparkle">✦</span></div><button class="quick-link" @click="openAdd('pago')"><span class="quick-symbol payment">＋</span><span><b>Anotar un pago</b><small>Único o recurrente</small></span><span class="arrow">→</span></button><button class="quick-link" @click="openAdd('cita')"><span class="quick-symbol appointment">＋</span><span><b>Agendar una cita</b><small>Médico, escuela y más</small></span><span class="arrow">→</span></button><button class="quick-link" @click="activeTab='historial'"><span class="quick-symbol history">↺</span><span><b>Ver historial</b><small>Lo que ya pasó</small></span><span class="arrow">→</span></button></section>
-              <section class="tip-card"><span class="tip-sticker">✷</span><div class="tip-label">UN RECORDATORIO AMABLE</div><h3>Lo cotidiano también merece su espacio.</h3><p>Agrega pagos puntuales, citas o actividades para que toda la familia esté al tanto.</p></section>
+              <ShopDashboardCard v-if="supabaseReady" @open="activeTab='compras'" /><section class="tip-card"><span class="tip-sticker">✷</span><div class="tip-label">UN RECORDATORIO AMABLE</div><h3>Lo cotidiano también merece su espacio.</h3><p>Agrega pagos puntuales, citas o actividades para que toda la familia esté al tanto.</p></section>
             </aside>
           </div>
           <section class="panel history-preview"><div class="panel-heading"><div><p class="eyebrow">UN POCO DE CONTEXTO</p><h2>Últimos movimientos</h2></div><button class="text-button" @click="activeTab='historial'">Ver historial <span>→</span></button></div><div v-for="entry in recentHistory" :key="entry.id" class="history-row"><span class="history-bullet" :class="entry.kind==='pago'?'paid':'visit'">{{entry.kind==='pago'?'✓':'✳'}}</span><span class="history-title"><b>{{entry.title}}</b><small>{{entry.meta}}</small></span><span class="history-amount">{{entry.amount||'Cita completada'}}</span></div><p v-if="!recentHistory.length" class="empty-state">Todavía no hay movimientos.</p></section>
@@ -61,6 +61,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { supabase, supabaseReady } from './supabase.js'
 import ShopList from './components/ShopList.vue'
+import ShopDashboardCard from './components/ShopDashboardCard.vue'
 import { useNotifications } from './composables/useNotifications.js'
 import AppSidebar from './components/AppSidebar.vue'
 import AppTopbar from './components/AppTopbar.vue'
